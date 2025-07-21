@@ -20,6 +20,10 @@ class SharedSelectionViewModel @Inject constructor() : ViewModel() {
     private val _allSuwar = MutableStateFlow<List<Suwar>>(emptyList())
     val allSuwar: StateFlow<List<Suwar>> = _allSuwar
 
+    private val _isRandom = MutableStateFlow(false)
+    val isRandom: StateFlow<Boolean> = _isRandom
+
+
     fun setSelectedReciter(reciter: ReciterWithMoshaf) {
         _selectedReciter.value = reciter
     }
@@ -53,8 +57,22 @@ fun selectPreviousOrNextSuwar(
         }
     }
 }
+    fun playRandomSuwar(availableSuwar: List<String>){
+        val randomIndex=availableSuwar.randomOrNull()?.toIntOrNull()
+        val randomSuwar=_allSuwar.value.find {
+            it.id==randomIndex
+        }
+        randomSuwar?.let {
+            _selectedSuwar.value=it
+        }
+    }
+    fun loopCurrentSurah(){
+        _selectedSuwar.value=_selectedSuwar.value
+    }
 
-
+    fun toggleRandom() {
+        _isRandom.value = !_isRandom.value
+    }
     enum class Direction {
         PREVIOUS, NEXT
     }

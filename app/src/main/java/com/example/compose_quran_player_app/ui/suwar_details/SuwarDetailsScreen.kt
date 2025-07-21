@@ -1,8 +1,8 @@
 package com.example.compose_quran_player_app.ui.suwar_details
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,12 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -44,14 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import com.example.compose_quran_player_app.R
 import com.example.compose_quran_player_app.ui.screen.Screen
 import com.example.compose_quran_player_app.ui.suwar_details.viewModel.SharedSelectionViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 
 @Composable
 fun SuwarDetailsScreen(
@@ -63,25 +57,57 @@ fun SuwarDetailsScreen(
 ) {
     val selectedReciter = sharedViewModel.selectedReciter.collectAsState().value
     val selectedSuwar = sharedViewModel.selectedSuwar.collectAsState().value
-    val allSuwar = sharedViewModel.allSuwar.collectAsState().value
+    val isRandom by sharedViewModel.isRandom.collectAsState()
+
     val context = LocalContext.current
     var isLooping by remember { mutableStateOf(false) }
 
-    // val suwarList = allSuwar[0].id.split(",").map { it.trim() }
+
 
     val surahIdFormatted = selectedSuwar?.id?.toString()?.padStart(3, '0') ?: ""
     val baseUrl = selectedReciter?.moshaf?.server?.let {
         if (it.endsWith("/")) it else "$it/"
     } ?: ""
 
-//    val audioUrl = baseUrl + surahIdFormatted + ".mp3"
-//    val exoPlayer = rememberExoPlayer(context, audioUrl)
-
     var position by remember { mutableStateOf(0L) }
     var duration by remember { mutableStateOf(1L) }
 
     val audioUrl = baseUrl + surahIdFormatted + ".mp3"
-    val exoPlayer = rememberExoPlayer(context, audioUrl)
+
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) {
+                        if (isLooping) {
+                            seekTo(0)
+                            playWhenReady = true
+                        } else if (isRandom) {
+                            val randomId = availableSuwar.randomOrNull()?.toIntOrNull()
+                            val randomSuwar =
+                                sharedViewModel.allSuwar.value.find { it.id == randomId }
+                            randomSuwar?.let {
+                                sharedViewModel.setSelectedSuwar(it)
+                            }
+                        } else {
+                            sharedViewModel.selectPreviousOrNextSuwar(
+                                direction = SharedSelectionViewModel.Direction.NEXT,
+                                availableSuwar = availableSuwar
+                            )
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+                DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+
 
     LaunchedEffect(audioUrl) {
         exoPlayer.stop()
@@ -189,14 +215,17 @@ fun SuwarDetailsScreen(
 
                 Icon(
                     painter = painterResource(R.drawable.ic_random_playing),
-                    contentDescription = "Random Surah",
+                    contentDescription = "Toggle Random Mode",
                     tint = Color.Black,
                     modifier = Modifier
                         .size(40.dp)
+                        .background(if (isRandom) Color.LightGray else Color.White)
                         .clickable {
-
+                            sharedViewModel.toggleRandom()
                         }
                 )
+
+
 
                 Icon(
                     painter = painterResource(R.drawable.ic_previous),
@@ -244,11 +273,14 @@ fun SuwarDetailsScreen(
 
                 Icon(
                     painter = painterResource(R.drawable.ic_loop),
-                    contentDescription = "Previous Surah",
+                    contentDescription = "Loop Surah",
                     tint = Color.Black,
                     modifier = Modifier
                         .size(40.dp)
+                        .background(if (isLooping) Color.LightGray else Color.White)
                         .clickable {
+                            sharedViewModel.loopCurrentSurah()
+                            isLooping = !isLooping
 
                         }
                 )
@@ -257,26 +289,6 @@ fun SuwarDetailsScreen(
     }
 }
 
-@Composable
-fun rememberExoPlayer(context: Context, url: String): ExoPlayer {
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri(url)
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            exoPlayer.release()
-            Log.d("ExoPlayer", "Released on dispose")
-        }
-    }
-
-    return exoPlayer
-}
 
 fun formatTime(ms: Long): String {
     val totalSeconds = ms / 1000
