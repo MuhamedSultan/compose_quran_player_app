@@ -38,6 +38,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var suwarList:List<String>
+
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,7 +98,7 @@ class MainActivity : ComponentActivity() {
                             })
                         ) { backStackEntry ->
                             val suwarIds = backStackEntry.arguments?.getString("suwarIds") ?: ""
-                            val suwarList = suwarIds.split(",").map { it.trim() }
+                             suwarList = suwarIds.split(",").map { it.trim() }
                             SuwarScreen(
                                 navController = navController,
                                 availableSuwarIds = suwarList,
@@ -105,7 +107,7 @@ class MainActivity : ComponentActivity() {
                         composable(
                             Screen.PlayerScreen.route){
 
-                            SuwarDetailsScreen(navController = navController)
+                            SuwarDetailsScreen(navController = navController,suwarList)
                         }
                     }
                 }

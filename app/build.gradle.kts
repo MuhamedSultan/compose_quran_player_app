@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation("com.google.accompanist:accompanist-flowlayout:0.17.0")
+    implementation(libs.androidx.media3.exoplayer)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
 
 
@@ -97,6 +98,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    implementation ("androidx.media3:media3-exoplayer:1.3.1")
+    implementation ("androidx.media3:media3-ui:1.3.1")
+
 
 
     // Testing

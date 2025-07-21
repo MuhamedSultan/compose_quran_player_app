@@ -48,6 +48,7 @@ fun SuwarScreen(
                     items(state.data.size) { suwar ->
                         SuwarItem(suwar = state.data[suwar], onItemClick = {
                             sharedViewModel.setSelectedSuwar(state.data[suwar])
+                            sharedViewModel.setAllSuwar(state.data)
                             navController.navigate(Screen.PlayerScreen.route)
                         })
                     }

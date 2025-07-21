@@ -17,6 +17,9 @@ class SharedSelectionViewModel @Inject constructor() : ViewModel() {
     private val _selectedSuwar = MutableStateFlow<Suwar?>(null)
     val selectedSuwar: StateFlow<Suwar?> = _selectedSuwar
 
+    private val _allSuwar = MutableStateFlow<List<Suwar>>(emptyList())
+    val allSuwar: StateFlow<List<Suwar>> = _allSuwar
+
     fun setSelectedReciter(reciter: ReciterWithMoshaf) {
         _selectedReciter.value = reciter
     }
@@ -24,4 +27,36 @@ class SharedSelectionViewModel @Inject constructor() : ViewModel() {
     fun setSelectedSuwar(suwar: Suwar) {
         _selectedSuwar.value = suwar
     }
+
+    fun setAllSuwar(list: List<Suwar>) {
+        _allSuwar.value = list
+    }
+
+fun selectPreviousOrNextSuwar(
+    direction: Direction,
+    availableSuwar: List<String>
+) {
+    val currentId = _selectedSuwar.value?.id ?: return
+
+    val currentIndex = availableSuwar.indexOf(currentId.toString())
+
+    val newIndex = when (direction) {
+        Direction.PREVIOUS -> currentIndex - 1
+        Direction.NEXT -> currentIndex + 1
+    }
+
+    if (newIndex in availableSuwar.indices) {
+        val newId = availableSuwar[newIndex].toIntOrNull()
+        val newSuwar = _allSuwar.value.find { it.id == newId }
+        newSuwar?.let {
+            _selectedSuwar.value = it
+        }
+    }
+}
+
+
+    enum class Direction {
+        PREVIOUS, NEXT
+    }
+
 }
