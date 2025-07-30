@@ -17,11 +17,11 @@ interface Dao {
     suspend fun saveReciters(reciter: List<Reciter>)
 
     @Query("SELECT * FROM reciters_table")
-        fun getAllReciters(): Flow<List<Reciter>>
+       suspend fun getAllReciters(): List<Reciter>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveSuwar(suwar: List<Suwar>)
 
     @Query("SELECT * FROM suwar_table WHERE id IN (:surahList)")
-    fun getAllSuwarForReciter(surahList: List<String>): Flow<List<Suwar>>
+    suspend fun getAllSuwarForReciter(surahList: List<String>): List<Suwar>
 }

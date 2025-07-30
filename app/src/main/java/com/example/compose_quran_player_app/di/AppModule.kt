@@ -63,9 +63,10 @@ object AppModule {
     @Singleton
     fun provideReciterRepository(
         remoteDataSource: RemoteDataSource,
-        localDataSource: LocalDataSource
+        localDataSource: LocalDataSource,
+        @ApplicationContext context: Context
     ): QuranRepository {
-        return QuranRepositoryImpl(remoteDataSource, localDataSource)
+        return QuranRepositoryImpl(remoteDataSource, localDataSource, context)
     }
 
 }

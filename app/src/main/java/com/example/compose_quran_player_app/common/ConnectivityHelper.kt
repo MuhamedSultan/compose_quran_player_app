@@ -7,17 +7,6 @@ import android.os.Build
 
 object ConnectivityHelper {
 
-    private var isInternetAvailable: Boolean = false
-
-    fun setInternetAvailability(available: Boolean) {
-        isInternetAvailable = available
-    }
-
-    fun isInternetAvailable(context: Context): Boolean {
-        return isInternetAvailable
-    }
-
-
     fun checkRealInternetAvailability(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
