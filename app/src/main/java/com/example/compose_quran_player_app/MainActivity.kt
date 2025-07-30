@@ -4,30 +4,28 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.material.Colors
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.compose_quran_player_app.data.pojo.reciters.Reciter
 import com.example.compose_quran_player_app.ui.reciters.components.RecitersScreen
 import com.example.compose_quran_player_app.ui.screen.Screen
 import com.example.compose_quran_player_app.ui.suwar.components.SuwarScreen
@@ -38,13 +36,16 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var suwarList:List<String>
+    private lateinit var suwarList: List<String>
+
 
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
+
         setContent {
+            val snackBarHostState = remember { SnackbarHostState() }
+
             Compose_quran_player_appTheme {
                 val systemUiController = rememberSystemUiController()
                 val navController = rememberNavController()
@@ -55,6 +56,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Scaffold(
+
                     topBar = {
                         TopAppBar(
                             title = {
@@ -81,6 +83,15 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             })
+                    },
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackBarHostState) { data ->
+                            Snackbar(
+                                snackbarData = data,
+                                containerColor = Color.Red,
+                                contentColor = Color.White
+                            )
+                        }
                     }
                 ) {
                     NavHost(
@@ -98,16 +109,19 @@ class MainActivity : ComponentActivity() {
                             })
                         ) { backStackEntry ->
                             val suwarIds = backStackEntry.arguments?.getString("suwarIds") ?: ""
-                             suwarList = suwarIds.split(",").map { it.trim() }
+                            suwarList = suwarIds.split(",").map { it.trim() }
                             SuwarScreen(
                                 navController = navController,
                                 availableSuwarIds = suwarList,
+                                context = applicationContext,
+                                snackBarHostState = snackBarHostState
                             )
                         }
-                        composable(
-                            Screen.PlayerScreen.route){
 
-                            SuwarDetailsScreen(navController = navController,suwarList)
+                        composable(
+                            Screen.PlayerScreen.route
+                        ) {
+                            SuwarDetailsScreen(navController = navController, suwarList)
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package com.example.compose_quran_player_app.ui.suwar.components
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.example.compose_quran_player_app.common.Result
@@ -16,14 +18,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.compose_quran_player_app.common.ConnectivityHelper
 import com.example.compose_quran_player_app.ui.screen.Screen
 import com.example.compose_quran_player_app.ui.suwar.viewModel.SuwarViewModel
 import com.example.compose_quran_player_app.ui.suwar_details.viewModel.SharedSelectionViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun SuwarScreen(
     navController: NavController,
     availableSuwarIds: List<String>,
+    snackBarHostState: SnackbarHostState = SnackbarHostState(),
+    context: Context,
     suwarViewModel: SuwarViewModel = hiltViewModel(),
     sharedViewModel: SharedSelectionViewModel = hiltViewModel(
         navController.getBackStackEntry(Screen.RecitersScreen.route)
@@ -35,9 +43,11 @@ fun SuwarScreen(
         suwarViewModel.getAvailableSuwar(availableSuwarIds)
     }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(color = Color.LightGray)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.LightGray)
+    ) {
         when (state) {
             is Result.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -49,8 +59,15 @@ fun SuwarScreen(
                         SuwarItem(suwar = state.data[suwar], onItemClick = {
                             sharedViewModel.setSelectedSuwar(state.data[suwar])
                             sharedViewModel.setAllSuwar(state.data)
-                            navController.navigate(Screen.PlayerScreen.route)
+                            if (ConnectivityHelper.checkRealInternetAvailability(context = context)) {
+                                navController.navigate(Screen.PlayerScreen.route)
+                            }else {
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    snackBarHostState.showSnackbar("No internet connection")
+                                }
+                            }
                         })
+
                     }
                 }
             }
