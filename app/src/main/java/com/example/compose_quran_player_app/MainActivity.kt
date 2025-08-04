@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.compose_quran_player_app.ui.reciters.components.RecitersScreen
@@ -54,6 +55,15 @@ class MainActivity : ComponentActivity() {
             Compose_quran_player_appTheme {
                 val systemUiController = rememberSystemUiController()
                 val navController = rememberNavController()
+                val currentBackStackEntry = navController.currentBackStackEntryAsState().value
+                val currentRoute = currentBackStackEntry?.destination?.route
+
+                val screenTitle = when {
+                    currentRoute == Screen.RecitersScreen.route -> "Reciters List"
+                    currentRoute?.startsWith(Screen.SuwarScreen.route) == true -> "Suwar List"
+                    currentRoute == Screen.PlayerScreen.route -> "Quran Player"
+                    else -> "Quran App"
+                }
 
                 SideEffect {
                     systemUiController.setStatusBarColor(
@@ -73,7 +83,8 @@ class MainActivity : ComponentActivity() {
                                 if (!isSearching.value) {
                                     searchQuery.value = ""
                                 }
-                            }
+                            }, screenTitle = screenTitle,
+                            currentRoute = currentRoute.toString()
                         )
                     },
                     snackbarHost = {
@@ -129,7 +140,9 @@ class MainActivity : ComponentActivity() {
         searchQuery: String,
         isSearching: Boolean,
         onSearchChange: (String) -> Unit,
-        onToggleSearch: () -> Unit
+        onToggleSearch: () -> Unit,
+        screenTitle: String,
+        currentRoute: String
     ) {
         val focusRequester = remember { FocusRequester() }
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -163,7 +176,7 @@ class MainActivity : ComponentActivity() {
                     }
                 } else {
                     Text(
-                        "Reciters List",
+                        screenTitle,
                         style = TextStyle(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp
@@ -175,12 +188,14 @@ class MainActivity : ComponentActivity() {
             },
             backgroundColor = Color(0xFF012331),
             actions = {
-                IconButton(onClick = onToggleSearch) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.White
-                    )
+                if (currentRoute == Screen.RecitersScreen.route || currentRoute?.startsWith(Screen.SuwarScreen.route) == true) {
+                    IconButton(onClick = onToggleSearch) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
         )
