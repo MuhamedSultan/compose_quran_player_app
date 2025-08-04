@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.example.compose_quran_player_app.common.Result
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SuwarScreen(
     navController: NavController,
+    searchQuery: String,
     availableSuwarIds: List<String>,
     snackBarHostState: SnackbarHostState = SnackbarHostState(),
     context: Context,
@@ -54,9 +56,16 @@ fun SuwarScreen(
             }
 
             is Result.Success -> {
+                val filteredSuwar = remember(searchQuery){
+                    if (searchQuery.isBlank()){
+                        state.data
+                    }else{
+                        state.data.filter { it.name.contains(searchQuery, ignoreCase = true) }
+                    }
+                }
                 LazyColumn {
-                    items(state.data.size) { suwar ->
-                        SuwarItem(suwar = state.data[suwar], onItemClick = {
+                    items(filteredSuwar.size) { suwar ->
+                        SuwarItem(suwar = filteredSuwar[suwar], onItemClick = {
                             sharedViewModel.setSelectedSuwar(state.data[suwar])
                             sharedViewModel.setAllSuwar(state.data)
                             if (ConnectivityHelper.checkRealInternetAvailability(context = context)) {

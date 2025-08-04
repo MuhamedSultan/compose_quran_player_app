@@ -26,6 +26,7 @@ import com.example.compose_quran_player_app.ui.suwar_details.viewModel.SharedSel
 @Composable
 fun RecitersScreen(
      navController: NavController,
+     searchQuery: String,
     viewModel: RecitersViewModel = hiltViewModel(),
       sharedViewModel: SharedSelectionViewModel = hiltViewModel()
 
@@ -35,6 +36,8 @@ fun RecitersScreen(
     LaunchedEffect(Unit) {
         viewModel.getReciters()
     }
+
+
 
     Box(
         modifier = Modifier
@@ -47,9 +50,16 @@ fun RecitersScreen(
             }
 
             is Result.Success -> {
-                val reciters = state.data
+                val filteredReciters = remember(searchQuery) {
+                    if (searchQuery.isBlank()) {
+                        state.data
+                    } else {
+                        state.data.filter { it.reciter.name.contains(searchQuery, ignoreCase = true) }
+                    }
+                }
+
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(reciters) { item: ReciterWithMoshaf ->
+                    items(filteredReciters) { item: ReciterWithMoshaf ->
                         val surahIds = item.moshaf.surah_list
                         ReciterItem(reciterWithMoshaf = item, onItemClick = {
                             sharedViewModel.setSelectedReciter(item)
@@ -58,6 +68,7 @@ fun RecitersScreen(
                     }
                 }
             }
+
 
             is Result.Error -> {
                 Text(
